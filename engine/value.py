@@ -24,19 +24,56 @@ class Value:
     def __repr__(self):
         return f"Value(data={self.data}, grad = {self.grad})"
     
+    def backward(self):
+        topo = []
+        visited = set()
+        
+        def build(v):
+            if v not in visited:
+                visited.add(v)
+                
+                for child in v._prev:
+                    build(child)
+                    
+                topo.append(v)
+                
+        build(self)
+        
+        self.grad = 1.0
+        
+        for node in reversed(topo):
+            node._backward()
+        
     def __add__(self, other):
         out = Value(self.data + other.data, (self, other), "+")
+        
+        def _backward():
+            self.grad += out.grad
+            other.grad += out.grad
+            
+        out._backward = _backward
+        
         return out
     
     def __mul__(self, other):
         out  = Value(self.data * other.data, (self, other), "*")
+        
+        def _backward():
+            self.grad += other.data * out.grad
+            other.grad += self.data * out.grad
+        
+        out._backward = _backward
+        
         return out
     
-a = Value(2.0)
-b = Value(3.0)
+
+a = Value(2)
+b = Value(3)
 
 c = a * b
 d = c + a
-e = d * b
 
-print(e)
+d.backward()
+
+print(a.grad)
+print(b.grad)
