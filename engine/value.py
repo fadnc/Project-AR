@@ -66,7 +66,18 @@ class Value:
         
         return out
     
-
+    def __sub__():
+        pass
+    
+    def __neg__():
+        pass
+    
+    def __truediv__():
+        pass
+    
+    def __pow__():
+        pass
+        
 a = Value(2)
 b = Value(3)
 
