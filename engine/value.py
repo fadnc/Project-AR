@@ -1,4 +1,5 @@
 from __future__  import annotations
+import math
 
 class Value:
     """
@@ -66,16 +67,44 @@ class Value:
         
         return out
     
-    def __sub__():
+    def __sub__(self, other):
+        out = Value(self.data - other.data, (self, other), "-")
+        
+        def _backward():
+            self.grad += other.grad * out.grad
+            other.grad += self.grad * out.grad * -1
+        
+        out._backward = _backward
+        
+        return out
+    
+    def __neg__(self, other):
+        out = Value(-self.data, (self,), "neg")
+        
+        def _backward():
+            self.grad += -1 * out.grad
+        out._backward = _backward
         pass
     
-    def __neg__():
-        pass
-    
-    def __truediv__():
-        pass
-    
-    def __pow__():
+    def __truediv__(self, other):
+        out = Value(self.data / other.data, (self, other), "/")
+        
+        def _backward():
+            self.grad += 1/other.data * out.grad
+            other.grad += -self.data/other.data**2 * out.grad
+        
+        out._backward = _backward
+        return out
+
+    def __pow__(self, other):
+        out = Value(self.data ** other.data, (self, other), "**")
+        
+        def _backward():
+            self.grad += other.data * self.data**(other.data-1) * out.grad
+            other.grad += self.data**other.data * math.log(self.data) * out.grad
+        
+        out._backward = _backward
+        return out
         pass
         
 a = Value(2)
