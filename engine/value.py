@@ -78,13 +78,14 @@ class Value:
         
         return out
     
-    def __neg__(self, other):
+    def __neg__(self):
         out = Value(-self.data, (self,), "neg")
         
         def _backward():
             self.grad += -1 * out.grad
+            
         out._backward = _backward
-        pass
+        return out
     
     def __truediv__(self, other):
         out = Value(self.data / other.data, (self, other), "/")
@@ -96,22 +97,24 @@ class Value:
         out._backward = _backward
         return out
 
-    def __pow__(self, other):
-        out = Value(self.data ** other.data, (self, other), "**")
+    def __pow__(self, power):
+        assert isinstance(power, (int, float)), "only supporting int/float powers for now"
+        out = Value(self.data ** power, (self, ), "**")
         
         def _backward():
-            self.grad += other.data * self.data**(other.data-1) * out.grad
-            other.grad += self.data**other.data * math.log(self.data) * out.grad
-        
+            self.grad += power * (self.data ** (power-1) * out.grad)
+                                              
         out._backward = _backward
         return out
-        pass
     
-    def __relu__(self, other):
-        out = Value(0 if self.data) < 0 else 1, other.data, (self, other), "relu")
+    def relu(self):
+        out = Value(0 if self.data < 0 else self.data, (self,), "ReLu")
         
         def _backward():
-            self.grad + = other.data
+            self.grad += (1 if self.data > 0 else 0) * out.grad
+            
+        out._backward = _backward
+        return out
     
 a = Value(2)
 b = Value(3)
